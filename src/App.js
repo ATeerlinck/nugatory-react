@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Word from './components/Word';
 import Counter from './components/Counter';
 import './App.css';
+import NewWord from './components/NewWord';
 
 class App extends Component {
   state = {
@@ -14,6 +15,12 @@ class App extends Component {
   handleDelete = (wordId) => {
     const words = this.state.words.filter(w => w.id !== wordId);
     this.setState({ words:words });
+  }
+  handleAdd = (word, color) => {
+    const { words } = this.state;
+    const id = words.length === 0 ? 1 : Math.max(...words.map(word => word.id)) + 1;
+    const mutableWords = words.concat({ id: id, word: word, color: color });
+    this.setState({ words:mutableWords });
   }
   componentDidMount() {
     console.log("App mounted");
@@ -32,6 +39,7 @@ class App extends Component {
             onDelete={ this.handleDelete } />
         )}
         <Counter totalWords={ words.length } />
+        <NewWord onAdd={ this.handleAdd } />
       </div>
      );
   }
