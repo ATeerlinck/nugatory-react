@@ -1,31 +1,41 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import Word from './components/Word';
 import Counter from './components/Counter';
-import './App.css';
 import NewWord from './components/NewWord';
+import './App.css';
 
 const App = () => {
   const [words, setWords] = useState([]);
+  const apiEndpoint = "https://nugatory.azurewebsites.net/api/word";
 
-  const handleDelete = (wordId) => {
-    const mutableWords = words.filter(w => w.id !== wordId);
-    setWords(mutableWords);
+  const handleDelete = async (wordId) => {
+    const originalWords = words;
+    setWords(words.filter(w => w.id !== wordId));
+    try {
+      await axios.delete(`${apiEndpoint}/${wordId}`);
+    } catch(ex) {
+      if (ex.response && ex.response.status === 404) {
+        // word already deleted
+        console.log("The record does not exist - it may have already been deleted");
+      } else { 
+        alert('An error occurred while deleting a word');
+        setWords(originalWords);
+      }
+    }
   }
-  const handleAdd = (word, color) => {
-    const id = words.length === 0 ? 1 : Math.max(...words.map(word => word.id)) + 1;
-    const mutableWords = words.concat({ id: id, word: word, color: color });
-    setWords(mutableWords);
+  const handleAdd = async (word, color) => {
+    const { data: post } = await axios.post(apiEndpoint, { word: word, color: color });
+    setWords(words.concat(post));
   }
   // this is the functional equivalent to componentDidMount
   useEffect(() => {
     // initial data loaded here
-    let mutableWords = [
-      { id: 1, word: "banana", color: "yellow" },
-      { id: 2, word: "apple", color: "red" },
-      { id: 3, word: "lime", color: "green" },
-      { id: 4, word: "orange", color: "orange" }
-    ]
-    setWords(mutableWords);
+    async function fetchData() {
+      const { data: fetchedWords } = await axios.get(apiEndpoint);
+      setWords(fetchedWords);
+    }
+    fetchData();
   }, []);
   return ( 
     <div className="App">
